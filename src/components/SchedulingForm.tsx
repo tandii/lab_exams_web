@@ -18,7 +18,8 @@ import { useToast } from '../hooks/useToast';
 import { Loading } from './Loading';
 import { isValidCPF } from '../utils/is-valid-cpf';
 import colors from 'tailwindcss/colors';
-import { SchedulesQuantityProps } from '../pages/Home';
+import { useSchedulingMutate } from '../hooks/useSchedulingMutate';
+import { useSchedules } from '../hooks/useSchedules';
 
 dayjs.locale(ptBr)
 dayjs.extend(utc)
@@ -71,16 +72,18 @@ export interface FormInput {
 
 export function SchedulingForm() {
     const [isOpenDialog, setIsOpenDialog] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
+    // const [isLoading, setIsLoading] = useState(false)
     const [successfullyCreated, setSuccessfullyCreated] = useState(false)
-    const { control, register, handleSubmit, formState: { errors }, reset, getValues, watch, setValue } = useForm<FormInput>({
+    const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormInput>({
         resolver: zodResolver(schema),
         defaultValues: {
             weekDay: weekDaysItems.defaultValue
         }
     })
     const { isOpenToast, handleToggleToast } = useToast()
-    const [schedulesQuantity, setSchedulesQuantity] = useState<SchedulesQuantityProps>()
+    // const [schedulesQuantity, setSchedulesQuantity] = useState<SchedulesQuantityProps>()
+    const { mutate, isLoading, isSuccess, isError } = useSchedulingMutate()
+    const { data } = useSchedules()
 
     const handleCreateScheduling: SubmitHandler<FormInput> = async ({ name, time, phone, cpf, gender, bloodGroup, weekDay }) => {
         // console.log(name, time, cpf, phone, gender, bloodGroup, weekDay)
@@ -96,84 +99,22 @@ export function SchedulingForm() {
         // console.log("dateUTC ->", dateUTC)
 
         // console.log("formatted ->", dayjs(dateUTC).format("DD-MM-YYYY HH[h]mm"))
-        // handleOpenToast()
-        // setIsOpen(true)
-        setIsLoading(true)
-        try {
-
-            const response = await api.post('/scheduling', {
-                name,
-                cpf,
-                bloodGroup,
-                gender,
-                phone,
-                date: dateUTC
-            })
-
-            // console.log(response.data)
-
-            if (response.data) {
-                setIsOpenDialog(false)
-
-                setSuccessfullyCreated(true)
-                handleToggleToast()
-
-                
-
-                reset({
-                    name: "",
-                    cpf: "",
-                    phone: "",
-                    gender: undefined,
-                    time: "8:15",
-                    bloodGroup: bloodGroupItems.defaultValue,
-                    weekDay: weekDaysItems.defaultValue,
-                })
-            }
-
-        } catch (err) {
-            const error = err as AxiosError
-            console.error(error.response?.data)
-
-            if (err) {
-                setSuccessfullyCreated(false)
-                handleToggleToast()
-            }
-        } finally {
-            setIsLoading(false)
+        const data = {
+            name,
+            cpf,
+            bloodGroup,
+            gender,
+            phone,
+            date: dateUTC
         }
+
+        // const response = await api.post('/scheduling', )
+        mutate(data)
     }
 
     const watchWeekDay = watch("weekDay")
 
     // console.log(watchWeekDay)
-
-    async function getSchedulesQuantity() {
-        try {
-            const response = await api.get('/schedules-quantity')
-
-            setSchedulesQuantity(response.data)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    // function alreadySchedulingWithThisTime(date?: [string]) {
-
-
-    //     ["8:00", "8:15", "8:30", "8:45", "9:00", "9:15", "9:30", "9:45", "10:00", "13:30", "13:45", "14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00"]
-    //         .includes("8:00")
-
-    //     let formattedTime
-
-    //     date?.map(time => {
-    //         formattedTime = dayjs(time).format('H:mm')
-    //     })
-
-    //     console.log(dayjs("2023-08-15T18:15:00.000Z").format('H:mm'))
-
-    //     return formattedTime
-    // }
 
     function getEarlyTime(date?: [string]) {
         // console.log(date)
@@ -202,64 +143,84 @@ export function SchedulingForm() {
     function chooseWeekDay() {
         switch (watchWeekDay) {
             case "segunda":
-                return schedulesQuantity?.schedulesQuantityByWeekDay.monday
+                return data?.schedulesQuantityByWeekDay.monday
             case "terça":
-                return schedulesQuantity?.schedulesQuantityByWeekDay.tuesday
+                return data?.schedulesQuantityByWeekDay.tuesday
             case "quarta":
-                return schedulesQuantity?.schedulesQuantityByWeekDay.wednesday
+                return data?.schedulesQuantityByWeekDay.wednesday
             case "quinta":
-                return schedulesQuantity?.schedulesQuantityByWeekDay.thursday
+                return data?.schedulesQuantityByWeekDay.thursday
             case "sexta":
-                return schedulesQuantity?.schedulesQuantityByWeekDay.friday
+                return data?.schedulesQuantityByWeekDay.friday
             default:
-                return schedulesQuantity?.schedulesQuantityByWeekDay.monday
-            // break;
+                return data?.schedulesQuantityByWeekDay.monday
         }
     }
 
     useEffect(() => {
-        // alreadySchedulingWithThisTime()
-        getSchedulesQuantity()
-    }, [])
+        setIsOpenDialog(false)
 
+        handleToggleToast()
+
+        reset({
+            name: "",
+            cpf: "",
+            phone: "",
+            gender: undefined,
+            time: "8:15",
+            bloodGroup: bloodGroupItems.defaultValue,
+            weekDay: weekDaysItems.defaultValue,
+        })
+    }, [isSuccess])
+
+    useEffect(() => {
+        handleToggleToast()
+
+        // const id = setTimeout(() => {
+        //     reset()
+        // }, 2000);
+
+        // return () => clearTimeout(id);
+    }, [isError])
+
+    console.log("sucess -->", isSuccess)
+    console.log("error -->", isError)
+ 
     useEffect(() => {
         switch (watchWeekDay) {
             case "segunda":
-                setValue("time", getEarlyTime(schedulesQuantity?.schedulesQuantityByWeekDay.monday.schedulingTimes))
+                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.monday.schedulingTimes))
                 break;
             case "terça":
-                setValue("time", getEarlyTime(schedulesQuantity?.schedulesQuantityByWeekDay.tuesday.schedulingTimes))
+                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.tuesday.schedulingTimes))
                 break;
             case "quarta":
-                setValue("time", getEarlyTime(schedulesQuantity?.schedulesQuantityByWeekDay.wednesday.schedulingTimes))
+                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.wednesday.schedulingTimes))
                 break;
             case "quinta":
-                setValue("time", getEarlyTime(schedulesQuantity?.schedulesQuantityByWeekDay.thursday.schedulingTimes))
+                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.thursday.schedulingTimes))
                 break;
             case "sexta":
-                setValue("time", getEarlyTime(schedulesQuantity?.schedulesQuantityByWeekDay.friday.schedulingTimes))
+                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.friday.schedulingTimes))
                 break;
             default:
-                setValue("time", getEarlyTime(schedulesQuantity?.schedulesQuantityByWeekDay.monday.schedulingTimes))
+                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.monday.schedulingTimes))
                 break;
         }
-    }, [watchWeekDay, schedulesQuantity])
-
-
+    }, [watchWeekDay, data])
 
     // console.log(dayjs("2023-08-16T12:30:00.000Z").format("DD/MM/YYYY HH:mm"))
 
-
     return (
         <>
-            {isOpenToast && successfullyCreated && (
+            {isSuccess && (
                 <ToastRadix
                     title='Criação de Agendamento'
                     message='Agendamento criado com sucesso!'
                     type='success'
                 />
             )}
-            {isOpenToast && !successfullyCreated && (
+            {isError && (
                 <ToastRadix
                     title='Criação de Agendamento'
                     message='Não foi possível criar o Agendamento!'
@@ -346,10 +307,11 @@ export function SchedulingForm() {
                                     </div>
                                     <div>
                                         <label htmlFor="time" className="font-semibold text-sm">Horário</label>
-                                        {[chooseWeekDay()].map(weekDay => (
+                                        {[chooseWeekDay()].map((weekDay, i) => (
                                             <Controller
                                                 name="time"
                                                 control={control}
+                                                key={`${weekDay?.date}-${i}`}
                                                 // defaultValue={getEarlyTime(weekDay?.schedulingTimes)}
                                                 render={({ field }) => (
                                                     <SelectPrimitive.Root {...field} value={field.value} onValueChange={field.onChange} /*defaultValue={getEarlyTime(weekDay?.schedulingTimes)}*/ >
