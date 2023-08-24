@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "@phosphor-icons/react";
 import InputMask from 'react-input-mask'
 import dayjs from 'dayjs';
@@ -11,31 +11,26 @@ import z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError, AxiosResponse } from 'axios';
 import { ToastRadix } from './Toast';
-import { useToast } from '../hooks/useToast';
-import { Loading } from './Loading';
 import { isValidCPF } from '../utils/is-valid-cpf';
+import { useCancelScheduling } from '../hooks/useCancelScheduling';
 import colors from 'tailwindcss/colors';
+import { Loading } from './Loading';
 
 dayjs.locale(ptBr)
 dayjs.extend(utc)
 
 const schema = z.object({
-
     cpf: z.string()
         .transform(value => value.replace(/\D/g, ''))
         .refine(value => value.length === 11 || !!value.match(/(\d)\1{10}/), { message: 'O campo "CPF" é obrigatório' })
         .refine(value => !value.match(/(\d)\1{10}/), { message: 'O campo "CPF" é inválido' })
         .refine(value => isValidCPF(value), { message: 'O campo "CPF" é inválido' }),
-
-    // cpf: z.string(),
-
 });
 
 export interface FormInput {
     cpf: string
 }
-
-interface SchedulingInfo {
+export interface SchedulingInfo {
     bloodGroup: string,
     cpf: string,
     createdAt: string,
@@ -50,42 +45,48 @@ interface SchedulingInfo {
 
 export function CancelScheduling() {
     const [scheduling, setScheduling] = useState<SchedulingInfo | null>(null)
-    const [SuccessfulSearch, setSuccessfulSearch] = useState(true)
     const [isOpenDialog, setIsOpenDialog] = useState(false)
-    const { isOpenToast, handleToggleToast } = useToast()
+    const [isError, setIsError] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const { register, handleSubmit, formState: { errors }, resetField } = useForm<FormInput>({
         resolver: zodResolver(schema),
         defaultValues: {
             cpf: ""
-        }
+        },
+        reValidateMode: 'onSubmit'
     })
 
-    // console.log(scheduling)
+    const { mutate, isSuccess } = useCancelScheduling()
 
+    const handleCancelScheduling = (cpf: string) => {
+        const confirmation = confirm('Deseja cancelar o agendamento?')
 
-    const handleCancelScheduling: SubmitHandler<FormInput> = async ({ cpf }) => {
+        if (confirmation) {
+            mutate(cpf)
+        }
+    }
+
+    useEffect(() => {
+        if (isSuccess) {
+            setScheduling(null)
+        }
+
+        if (!isOpenDialog) {
+            setScheduling(null)
+            resetField("cpf")
+        }
+
+    }, [isSuccess, isOpenDialog])
+
+    const handleFindScheduling: SubmitHandler<FormInput> = async ({ cpf }) => {
+        setIsError(false)
         setIsLoading(true)
 
-        
         try {
-            
-            
             const response: AxiosResponse<SchedulingInfo> = await api.get(`/scheduling?cpf=${cpf}`)
-            
-            setScheduling({
-                bloodGroup: response.data.bloodGroup,
-                name: response.data.name,
-                cpf: response.data.cpf?.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4"),
-                gender: response.data.gender,
-                id: response.data.id,
-                createdAt: response.data.createdAt,
-                phone: response.data.phone,
-                Scheduling: {
-                    date: dayjs(response.data.Scheduling.date).format('DD/MM/YYYY [~] HH[h]mm')
-                },
-            })
-            
+
+            setScheduling(response.data)
+
             resetField("cpf")
 
         } catch (err) {
@@ -93,8 +94,8 @@ export function CancelScheduling() {
             console.error(error.response?.data)
 
             if (err) {
-                setSuccessfulSearch(false)
-                handleToggleToast()
+                setIsError(true)
+                setScheduling(null)
             }
 
         } finally {
@@ -104,7 +105,7 @@ export function CancelScheduling() {
 
     return (
         <>
-            {isOpenToast && !SuccessfulSearch && (
+            {isError && (
                 <ToastRadix
                     title='Cancelar Agendamento'
                     message='Não há agendamento com este CPF!'
@@ -125,7 +126,7 @@ export function CancelScheduling() {
                         <Dialog.Title className='text-xl text-zinc-100 font-semibold mb-6'>
                             Cancelar Agendamento
                         </Dialog.Title>
-                        <form onSubmit={handleSubmit(handleCancelScheduling)}>
+                        <form onSubmit={handleSubmit(handleFindScheduling)}>
                             <div className="flex flex-col gap-2">
                                 <label htmlFor="cpf" className="text-zinc-100 text-sm">Digite o CPF que usou para fazer o agendamento.</label>
                                 <div className='flex gap-6'>
@@ -151,25 +152,26 @@ export function CancelScheduling() {
                             </button>
                         </Dialog.Close>
                         {scheduling && (
-                            <form className='absolute left-0 -bottom-20 pl-4 py-3 w-full bg-zinc-500'>
+                            <div className='absolute left-0 -bottom-20 pl-4 py-3 w-full bg-zinc-500'>
                                 <div className='grid grid-cols-3 '>
                                     <div className='flex flex-col gap-2'>
                                         <p className='text-zinc-100 text-sm font-semibold'>Paciente: <span className='font-normal'>{scheduling.name}</span></p>
-                                        <p className='text-zinc-100 text-sm font-semibold'>Horário: <span className='font-normal'>{scheduling.Scheduling?.date}</span></p>
+                                        <p className='text-zinc-100 text-sm font-semibold'>Horário: <span className='font-normal'>{dayjs(scheduling.Scheduling.date).format('DD/MM/YYYY [~] HH[h]mm')}</span></p>
                                     </div>
                                     <div>
-                                        <p className='text-zinc-100 text-sm font-semibold'>CPF: <span className='font-normal'>{scheduling.cpf}</span></p>
+                                        <p className='text-zinc-100 text-sm font-semibold'>CPF: <span className='font-normal'>{scheduling.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</span></p>
                                     </div>
                                     <div className='flex items-center justify-center'>
                                         <button
                                             type="submit"
+                                            onClick={() => handleCancelScheduling(scheduling.cpf)}
                                             className="flex justify-center items-center h-8 w-28 disabled:bg-zinc-100/70 bg-zinc-100 hover:bg-zinc-100/80 transition-all rounded font-semibold"
                                         >
                                             CANCELAR
                                         </button>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
                         )}
                     </Dialog.Content>
                 </Dialog.Portal>

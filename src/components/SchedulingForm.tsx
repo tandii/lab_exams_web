@@ -8,18 +8,16 @@ import { Select } from './Select';
 import dayjs from 'dayjs';
 import ptBr from 'dayjs/locale/pt-br'
 import utc from 'dayjs/plugin/utc'
-import { api } from '../lib/api';
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
 import z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { AxiosError } from 'axios';
 import { ToastRadix } from './Toast';
-import { useToast } from '../hooks/useToast';
 import { Loading } from './Loading';
 import { isValidCPF } from '../utils/is-valid-cpf';
 import colors from 'tailwindcss/colors';
-import { useSchedulingMutate } from '../hooks/useSchedulingMutate';
+import { useSchedulingMutate } from '../hooks/useCreateScheduling';
 import { useSchedules } from '../hooks/useSchedules';
+import { getEarliestTimeAvailable } from '../utils/get-earliest-time-available'
 
 dayjs.locale(ptBr)
 dayjs.extend(utc)
@@ -50,14 +48,6 @@ const schema = z.object({
     gender: z.string({ required_error: 'O campo "SEXO" é obrigatório' }),
     bloodGroup: z.string(),
     weekDay: z.string()
-
-    // name: z.string(),
-    // time: z.string(),
-    // phone: z.string(),
-    // cpf: z.string(),
-    // gender: z.string(),
-    // bloodGroup: z.string(),
-    // weekDay: z.string(),
 });
 
 export interface FormInput {
@@ -72,33 +62,24 @@ export interface FormInput {
 
 export function SchedulingForm() {
     const [isOpenDialog, setIsOpenDialog] = useState(false)
-    // const [isLoading, setIsLoading] = useState(false)
-    const [successfullyCreated, setSuccessfullyCreated] = useState(false)
     const { control, register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<FormInput>({
         resolver: zodResolver(schema),
         defaultValues: {
             weekDay: weekDaysItems.defaultValue
         }
     })
-    const { isOpenToast, handleToggleToast } = useToast()
-    // const [schedulesQuantity, setSchedulesQuantity] = useState<SchedulesQuantityProps>()
-    const { mutate, isLoading, isSuccess, isError } = useSchedulingMutate()
+    const { mutate, isSuccess, isLoading, isError } = useSchedulingMutate()
     const { data } = useSchedules()
 
+    const watchWeekDay = watch("weekDay")
+
+    const [key, setKey] = useState(+new Date())
+
     const handleCreateScheduling: SubmitHandler<FormInput> = async ({ name, time, phone, cpf, gender, bloodGroup, weekDay }) => {
-        // console.log(name, time, cpf, phone, gender, bloodGroup, weekDay)
-
-        console.log(gender)
-
         const weekDayIndex = weekDaysItems.values.findIndex(value => value.toLowerCase() === weekDay) + 1
-        // console.log(dayjs(new Date()).day(7).add(weekDay, 'day').format("DD-MM-YYYY"))
-        // const time = formData.get("time")
         const date = dayjs(new Date()).day(7).add(weekDayIndex, 'day').format("MM DD, YYYY")
         const dateUTC = new Date(`${date} ${String(time)}`).toISOString()
 
-        // console.log("dateUTC ->", dateUTC)
-
-        // console.log("formatted ->", dayjs(dateUTC).format("DD-MM-YYYY HH[h]mm"))
         const data = {
             name,
             cpf,
@@ -108,37 +89,25 @@ export function SchedulingForm() {
             date: dateUTC
         }
 
-        // const response = await api.post('/scheduling', )
         mutate(data)
     }
 
-    const watchWeekDay = watch("weekDay")
+    useEffect(() => {
+        if (isSuccess) {
+            setIsOpenDialog(false)
+            setKey(+new Date())
 
-    // console.log(watchWeekDay)
-
-    function getEarlyTime(date?: [string]) {
-        // console.log(date)
-        let earliestTimeAvailable = ["8:00", "8:15", "8:30", "8:45", "9:00", "9:15", "9:30", "9:45", "10:00", "13:30", "13:45", "14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00"]
-
-        date?.map(time => {
-            // console.log(dayjs(earlyScheduling).format('DD HH:mm') )
-
-            earliestTimeAvailable =
-                earliestTimeAvailable
-                    .filter(item => item !== dayjs(time).format('H:mm'))
-
-            // console.log(dayjs(date[0]).format('DD HH:mm'), earlyScheduling[0])
-            // console.log(dayjs('2023-08-17T12:00:00.000Z').format('DD HH:mm'))
-            // console.log(dayjs(time).format('H:mm'), dayjs(date[0]).format('DD'))
-        })
-
-
-        // // console.log(dayjs(earlyScheduling).format('DD HH:mm') )
-        // console.log(earliestTimeAvailable, dayjs(date?.[0]).format('DD'))
-
-        return earliestTimeAvailable[0]
-        // return ''
-    }
+            reset({
+                name: "",
+                cpf: "",
+                phone: "",
+                gender: undefined,
+                time: "8:15",
+                bloodGroup: bloodGroupItems.defaultValue,
+                weekDay: weekDaysItems.defaultValue,
+            })
+        }
+    }, [isSuccess])
 
     function chooseWeekDay() {
         switch (watchWeekDay) {
@@ -157,59 +126,37 @@ export function SchedulingForm() {
         }
     }
 
-    useEffect(() => {
-        setIsOpenDialog(false)
+    function getDate() {
+        const weekDayIndex = weekDaysItems.values.findIndex(value => value.toLowerCase() === watchWeekDay) + 1
+        const date = new Date(dayjs(new Date()).day(7).add(weekDayIndex, 'day').format("MM DD, YYYY")).toISOString()
 
-        handleToggleToast()
+        return dayjs(date).format('DD/MM/YYYY')
+    }
 
-        reset({
-            name: "",
-            cpf: "",
-            phone: "",
-            gender: undefined,
-            time: "8:15",
-            bloodGroup: bloodGroupItems.defaultValue,
-            weekDay: weekDaysItems.defaultValue,
-        })
-    }, [isSuccess])
+    getDate()
 
-    useEffect(() => {
-        handleToggleToast()
-
-        // const id = setTimeout(() => {
-        //     reset()
-        // }, 2000);
-
-        // return () => clearTimeout(id);
-    }, [isError])
-
-    console.log("sucess -->", isSuccess)
-    console.log("error -->", isError)
- 
     useEffect(() => {
         switch (watchWeekDay) {
             case "segunda":
-                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.monday.schedulingTimes))
+                setValue("time", getEarliestTimeAvailable(data?.schedulesQuantityByWeekDay.monday.schedulingTimes))
                 break;
             case "terça":
-                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.tuesday.schedulingTimes))
+                setValue("time", getEarliestTimeAvailable(data?.schedulesQuantityByWeekDay.tuesday.schedulingTimes))
                 break;
             case "quarta":
-                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.wednesday.schedulingTimes))
+                setValue("time", getEarliestTimeAvailable(data?.schedulesQuantityByWeekDay.wednesday.schedulingTimes))
                 break;
             case "quinta":
-                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.thursday.schedulingTimes))
+                setValue("time", getEarliestTimeAvailable(data?.schedulesQuantityByWeekDay.thursday.schedulingTimes))
                 break;
             case "sexta":
-                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.friday.schedulingTimes))
+                setValue("time", getEarliestTimeAvailable(data?.schedulesQuantityByWeekDay.friday.schedulingTimes))
                 break;
             default:
-                setValue("time", getEarlyTime(data?.schedulesQuantityByWeekDay.monday.schedulingTimes))
+                setValue("time", getEarliestTimeAvailable(data?.schedulesQuantityByWeekDay.monday.schedulingTimes))
                 break;
         }
     }, [watchWeekDay, data])
-
-    // console.log(dayjs("2023-08-16T12:30:00.000Z").format("DD/MM/YYYY HH:mm"))
 
     return (
         <>
@@ -220,6 +167,7 @@ export function SchedulingForm() {
                     type='success'
                 />
             )}
+
             {isError && (
                 <ToastRadix
                     title='Criação de Agendamento'
@@ -227,6 +175,7 @@ export function SchedulingForm() {
                     type='error'
                 />
             )}
+
             <Dialog.Root open={isOpenDialog} onOpenChange={setIsOpenDialog}>
                 <Dialog.Trigger asChild>
                     <button className="text-zinc-50 py-2 bg-gray-500 hover:bg-gray-400/80 px-14 font-semibold rounded-lg mt-14">FAZER AGENDAMENTO</button>
@@ -240,7 +189,7 @@ export function SchedulingForm() {
                                 <div className="flex flex-col gap-4">
                                     <div className="flex flex-col gap-2">
                                         <label htmlFor="name" className="font-semibold text-sm">Nome</label>
-                                        <input type="text" {...register("name")} autoComplete='off' className="bg-zinc-800 rounded px-3 text-sm h-8 w-44 focus:outline-none" />
+                                        <input maxLength={70} type="text" {...register("name")} autoComplete='off' className="bg-zinc-800 rounded px-3 text-sm h-8 w-44 focus:outline-none" />
                                         {errors.name && <span className="-mt-2 text-[11px] text-red-300">{errors.name.message}</span>}
                                     </div>
 
@@ -258,6 +207,7 @@ export function SchedulingForm() {
                                     <div className="flex flex-col gap-2">
                                         <label htmlFor="gender" className="font-semibold text-sm">Sexo</label>
                                         <Controller
+                                            key={key}
                                             name="gender"
                                             defaultValue={undefined}
                                             control={control}
@@ -275,7 +225,7 @@ export function SchedulingForm() {
                                                             value="feminino"
                                                             id="r1"
                                                         >
-                                                            <RadioGroup.Indicator className={`${field.value === "feminino" ? "after:bg-zinc-100" : ""} flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-full`} />
+                                                            <RadioGroup.Indicator className={` data-[state=checked]:after:bg-zinc-100 flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-full`} />
                                                         </RadioGroup.Item>
                                                         <label className="text-zinc-100 text-sm" htmlFor="r1">
                                                             Feminino
@@ -287,7 +237,7 @@ export function SchedulingForm() {
                                                             value="masculino"
                                                             id="r2"
                                                         >
-                                                            <RadioGroup.Indicator className={`${field.value === "masculino" ? "after:bg-zinc-100" : ""} flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-full`} />
+                                                            <RadioGroup.Indicator className={`data-[state=checked]:after:bg-zinc-100 flex items-center justify-center w-full h-full relative after:content-[''] after:block after:w-[8px] after:h-[8px] after:rounded-full`} />
                                                         </RadioGroup.Item>
                                                         <label className="text-zinc-100 text-sm" htmlFor="r2">
                                                             Masculino
@@ -303,18 +253,20 @@ export function SchedulingForm() {
                                 <div className="flex flex-col gap-4">
                                     <div className="flex flex-col gap-2">
                                         <label htmlFor="dayWeek" className="font-semibold text-sm">Dia da semana</label>
-                                        <Select control={control} values={weekDaysItems.values} defaultValue={weekDaysItems.defaultValue} name="weekDay" />
+                                        <div className='flex items-center gap-4'>
+                                            <Select control={control} values={weekDaysItems.values} defaultValue={weekDaysItems.defaultValue} name="weekDay" />
+                                            <span className='text-[13px]' >{getDate()}</span>
+                                        </div>
                                     </div>
-                                    <div>
+                                    <div className="flex flex-col gap-2">
                                         <label htmlFor="time" className="font-semibold text-sm">Horário</label>
                                         {[chooseWeekDay()].map((weekDay, i) => (
                                             <Controller
                                                 name="time"
                                                 control={control}
                                                 key={`${weekDay?.date}-${i}`}
-                                                // defaultValue={getEarlyTime(weekDay?.schedulingTimes)}
                                                 render={({ field }) => (
-                                                    <SelectPrimitive.Root {...field} value={field.value} onValueChange={field.onChange} /*defaultValue={getEarlyTime(weekDay?.schedulingTimes)}*/ >
+                                                    <SelectPrimitive.Root {...field} value={field.value} onValueChange={field.onChange} >
                                                         <SelectPrimitive.Trigger asChild aria-label="Food" >
                                                             <button className="flex items-center w-fit pl-5 pr-4 h-8 text-sm rounded gap-3 bg-zinc-800 text-zinc-100  data-[placeholder]:text-zinc-500 data-[placeholder]:text-sm outline-none">
                                                                 <SelectPrimitive.Value />
@@ -333,11 +285,9 @@ export function SchedulingForm() {
                                                                         <SelectPrimitive.Label className="text-xs text-center mb-2 text-zinc-100/60">
                                                                             Manhã
                                                                         </SelectPrimitive.Label>
-                                                                        {/* {schedulesQuantity?.schedulesQuantityByWeekDay.} */}
                                                                         {["8:00", "8:15", "8:30", "8:45", "9:00", "9:15", "9:30", "9:45", "10:00"].map(
                                                                             (hour, i) => (
                                                                                 <SelectPrimitive.Item
-                                                                                    // disabled={hour === alreadySchedulingWithThisTime(weekDay?.schedulingTimes)}
                                                                                     disabled={weekDay?.schedulingTimes.map(time => {
                                                                                         return dayjs(time).format('H:mm')
                                                                                     }).includes(hour)}
