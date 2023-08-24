@@ -1,5 +1,4 @@
 import * as ToastPrimitive from "@radix-ui/react-toast";
-import { useToast } from "../hooks/useToast";
 import { CheckCircle, WarningCircle, X } from "@phosphor-icons/react";
 import colors from 'tailwindcss/colors'
 
@@ -10,13 +9,9 @@ interface ToastRadix {
 }
 
 export function ToastRadix({ title, message, type }: ToastRadix) {
-    const { isOpenToast, setIsOpenToast } = useToast()
-
     return (
-        <ToastPrimitive.Provider swipeDirection="right">
+        <ToastPrimitive.Provider swipeDirection='right' duration={5000} >
             <ToastPrimitive.Root
-                open={isOpenToast}
-                onOpenChange={setIsOpenToast}
                 className="z-50 fixed bg-gray-100 bottom-10 right-4 w-full max-w-sm rounded-lg"
             >
                 <div className="flex">
