@@ -8,7 +8,7 @@ const fetchData = async ():AxiosPromise<SchedulesQuantityResponse> => {
     return response
 }
 
-export function useSchedules() {
+export function useSchedulesQuantity() {
     const query = useQuery({
         queryFn: fetchData,
         queryKey: ['schedules']

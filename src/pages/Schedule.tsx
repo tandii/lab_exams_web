@@ -3,11 +3,11 @@ import { SchedulingForm } from "../components/SchedulingForm";
 import { CancelScheduling } from "../components/CancelScheduling";
 import dayjs from "dayjs";
 import { Header } from "../components/Header";
-import { useSchedules } from '../hooks/useSchedules';
+import { useSchedulesQuantity } from '../hooks/useSchedulesQuantity';
 import { getEarliestTimeAvailable } from '../utils/get-earliest-time-available'
 
 export function Schedule() {
-    const { data } = useSchedules()
+    const { data } = useSchedulesQuantity()
 
     const weekDaysInfo = [
         data?.schedulesQuantityByWeekDay.monday,

@@ -16,7 +16,7 @@ import { Loading } from './Loading';
 import { isValidCPF } from '../utils/is-valid-cpf';
 import colors from 'tailwindcss/colors';
 import { useSchedulingMutate } from '../hooks/useCreateScheduling';
-import { useSchedules } from '../hooks/useSchedules';
+import { useSchedulesQuantity } from '../hooks/useSchedulesQuantity';
 import { getEarliestTimeAvailable } from '../utils/get-earliest-time-available'
 
 dayjs.locale(ptBr)
@@ -69,7 +69,7 @@ export function SchedulingForm() {
         }
     })
     const { mutate, isSuccess, isLoading, isError } = useSchedulingMutate()
-    const { data } = useSchedules()
+    const { data } = useSchedulesQuantity()
 
     const watchWeekDay = watch("weekDay")
 
