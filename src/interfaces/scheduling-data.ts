@@ -2,12 +2,12 @@ export interface SchedulingData {
     name: string;
     cpf: string;
     bloodGroup: string;
-    gender: string;
+    gender: string
     phone: string;
     date: string;
 }
 
-export interface SchedulesResponse {
+export interface SchedulesQuantityResponse {
     schedulesQuantityByWeekDay: {
         monday: {
             date: string

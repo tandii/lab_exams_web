@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { AxiosPromise } from 'axios'
-import { SchedulesResponse } from '../interfaces/scheduling-data'
+import { SchedulesQuantityResponse } from '../interfaces/scheduling-data'
 
-const fetchData = async ():AxiosPromise<SchedulesResponse> => {
-    const response = await api.get<SchedulesResponse>('/schedules-quantity')
+const fetchData = async ():AxiosPromise<SchedulesQuantityResponse> => {
+    const response = await api.get<SchedulesQuantityResponse>('/schedules-quantity')
     return response
 }
 
