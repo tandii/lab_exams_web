@@ -2,8 +2,6 @@
     Lab exams - Frontend
 </h1>
 
-## Sobre
-
 Lab Exams é uma aplicação desenvolvida utilizando React, Typescript, React Query, Tailwind CSS e a biblioteca de componentes Radix UI.
 
 A aplicação consiste em um site web que tem como finalidade fazer o cadastro de um agendamento para coleta de sangue. Apresenta uma área de informação para mostrar quantos agendamentos ainda restam em determinado dia e também permite que o paciente cancele o seu exame caso haja algum imprevisto.
