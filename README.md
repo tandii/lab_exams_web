@@ -1,5 +1,5 @@
 <h1 align="center">
-    Lab exams
+    Lab exams - Frontend
 </h1>
 
 ## Sobre
