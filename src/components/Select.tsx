@@ -36,7 +36,6 @@ export function Select({ values, defaultValue, name, control }: SelectProps) {
                                     {values.map(
                                         (value, i) => (
                                             <SelectPrimitive.Item
-                                                // disabled={value === "Grapes"}
                                                 key={`${value}-${i}`}
                                                 value={value.toLowerCase()}
                                                 className="relative flex items-center px-8 py-2 rounded-md text-sm text-zinc-100 bg-zinc-800 hover:bg-zinc-700"

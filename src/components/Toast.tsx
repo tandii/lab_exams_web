@@ -1,6 +1,7 @@
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import { CheckCircle, WarningCircle, X } from "@phosphor-icons/react";
 import colors from 'tailwindcss/colors'
+import { clsx } from 'clsx'
 
 interface ToastRadix {
     title: string
@@ -28,13 +29,19 @@ export function ToastRadix({ title, message, type }: ToastRadix) {
                             <ToastPrimitive.Title className="text-sm font-medium text-zinc-900">
                                 {title}
                             </ToastPrimitive.Title>
-                            <ToastPrimitive.Description className={`mt-1 text-sm ${type === "success" ? "text-green-800" : ""} ${type === "error" ? "text-red-800" : ""}`}>
+                            <ToastPrimitive.Description
+                                className={clsx(
+                                    "mt-1 text-sm",
+                                    type === 'success' && "text-green-800",
+                                    type === 'error' && "text-red-800",
+                                )}
+                            >
                                 {message}
                             </ToastPrimitive.Description>
                         </div>
                     </div>
                     <div className="flex my-auto px-3 py-2">
-                        <ToastPrimitive.Close className="w-full rounded-full p-2 flex items-center justify-center text-sm font-medium text-gray-700  hover:bg-zinc-200">
+                        <ToastPrimitive.Close className="w-full rounded-full p-2 flex items-center justify-center text-sm font-medium text-gray-700 hover:bg-zinc-200">
                             <X />
                         </ToastPrimitive.Close>
                     </div>

@@ -5,6 +5,7 @@ import img_4 from '../assets/img_4.jpg'
 import img_5 from '../assets/img_5.jpg'
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
+import { clsx } from 'clsx'
 
 const images = [
     img_1,
@@ -41,12 +42,25 @@ export function Carousel() {
             </div>
             <div className="flex flex-col">
                 {images.map((item, i) => (
-                    <img key={`${item}-${i}`} className={`${slide === i ? "" : "hidden"} rounded-lg w-[800px] h-72 object-cover`} src={item} alt="" />
+                    <img
+                        key={`${item}-${i}`}
+                        className={clsx(
+                            "rounded-lg w-[800px] h-72 object-cover",
+                            slide !== i && "hidden"
+                        )}
+                        src={item}
+                        alt=""
+                    />
                 ))}
                 <div className="flex justify-center items-center gap-3">
                     {
                         images.map((_, i) => (
-                            <div key={i} onClick={() => setSlide(i)} className={`${slide === i ? "bg-zinc-500" : "border border-zinc-500"} w-2 h-2 hover:bg-slate-500/40 cursor-pointer rounded-full mt-3`} />
+                            <div key={i} onClick={() => setSlide(i)}
+                                className={clsx(
+                                    "w-2 h-2 hover:bg-slate-500/40 cursor-pointer rounded-full mt-3",
+                                    slide === i ? "bg-zinc-500" : "border border-zinc-500"
+                                )}
+                            />
                         ))
                     }
                 </div>

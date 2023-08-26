@@ -109,6 +109,13 @@ export function SchedulingForm() {
         }
     }, [isSuccess])
 
+    function getDate() {
+        const weekDayIndex = weekDaysItems.values.findIndex(value => value.toLowerCase() === watchWeekDay) + 1
+        const date = new Date(dayjs(new Date()).day(7).add(weekDayIndex, 'day').format("MM DD, YYYY")).toISOString()
+
+        return dayjs(date).format('DD/MM/YYYY')
+    }
+
     function chooseWeekDay() {
         switch (watchWeekDay) {
             case "segunda":
@@ -125,15 +132,6 @@ export function SchedulingForm() {
                 return data?.schedulesQuantityByWeekDay.monday
         }
     }
-
-    function getDate() {
-        const weekDayIndex = weekDaysItems.values.findIndex(value => value.toLowerCase() === watchWeekDay) + 1
-        const date = new Date(dayjs(new Date()).day(7).add(weekDayIndex, 'day').format("MM DD, YYYY")).toISOString()
-
-        return dayjs(date).format('DD/MM/YYYY')
-    }
-
-    getDate()
 
     useEffect(() => {
         switch (watchWeekDay) {

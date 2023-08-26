@@ -79,9 +79,14 @@ export function CancelScheduling() {
     }, [isSuccess, isOpenDialog])
 
     const handleFindScheduling: SubmitHandler<FormInput> = async ({ cpf }) => {
+        
+        if (scheduling?.cpf === cpf) {
+            return resetField('cpf')
+        }
+        
         setIsError(false)
         setIsLoading(true)
-
+        
         try {
             const response: AxiosResponse<SchedulingInfo> = await api.get(`/scheduling?cpf=${cpf}`)
 
