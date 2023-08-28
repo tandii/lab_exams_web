@@ -180,7 +180,7 @@ export function SchedulingForm() {
                 </Dialog.Trigger>
                 <Dialog.Portal>
 
-                    <Dialog.Overlay className="bg-black/50 data-[state=open]:animate-overlayShow fixed inset-0" />
+                    <Dialog.Overlay className="bg-black/50 fixed inset-0" />
                     <Dialog.Content className="bg-zinc-500 p-10 fixed top-[50%] left-[50%] max-w-[800px] translate-x-[-50%] translate-y-[-50%] rounded-xl">
                         <form onSubmit={handleSubmit(handleCreateScheduling)}>
                             <div className="bg-zinc-500 grid grid-cols-2 text-zinc-100">
@@ -355,7 +355,7 @@ export function SchedulingForm() {
 
                         <Dialog.Close asChild>
                             <button className="absolute top-3 right-3 hover:bg-zinc-50/20 p-1 rounded-full" aria-label="Close">
-                                <X />
+                                <X size={16} />
                             </button>
                         </Dialog.Close>
                     </Dialog.Content>
