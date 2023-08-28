@@ -14,6 +14,10 @@ A aplicação consiste em um site web que tem como finalidade fazer o cadastro d
     <img src=".github/assets/web5.png" width="400"/>
 </div>
 
+## 🎨 Layout
+
+- [Figma](https://www.figma.com/file/eq6L2Imzp6P9vkGshI7rLl/lab_exams?type=design&node-id=0%3A1&mode=design&t=DqyoyCSQarbDDNJI-1)
+
 ## 📋 Requisitos
 
 Antes de iniciar, você deve ter o Node.js e o NPM instalados em sua máquina.
