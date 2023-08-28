@@ -6,12 +6,12 @@ Lab Exams é uma aplicação desenvolvida utilizando React, Typescript, React Qu
 
 A aplicação consiste em um site web que tem como finalidade fazer o cadastro de um agendamento para coleta de sangue. Apresenta uma área de informação para mostrar quantos agendamentos ainda restam em determinado dia e também permite que o paciente cancele o seu exame caso haja algum imprevisto.
 
-<div align="center" style="display:flex; flex-wrap: wrap;  justify-content: center; gap: 20px" >
-    <img src=".github/assets/web1.png" width="300"/>
-    <img src=".github/assets/web2.png" width="300"/>
-    <img src=".github/assets/web3.png" width="300"/>
-    <img src=".github/assets/web4.png" width="300"/>
-    <img src=".github/assets/web5.png" width="300"/>
+<div align="center" style="display:flex; flex-wrap: wrap;  justify-content: center; gap: 32px" >
+    <img src=".github/assets/web1.png" width="500"/>
+    <img src=".github/assets/web2.png" width="500"/>
+    <img src=".github/assets/web3.png" width="500"/>
+    <img src=".github/assets/web4.png" width="500"/>
+    <img src=".github/assets/web5.png" width="500"/>
 </div>
 
 ## 📋 Requisitos
