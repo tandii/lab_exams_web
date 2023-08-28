@@ -33,7 +33,7 @@ export function Schedule() {
                                     weekDay?.schedulesQuantity <= 5 && "text-blue-300",
                                     weekDay?.schedulesQuantity >= 6 && "text-green-300",
                                     weekDay?.schedulesQuantity >= 12 && "text-orange-300",
-                                    weekDay?.schedulesQuantity >= 16 && "text-red-300")
+                                    weekDay?.schedulesQuantity >= 18 && "text-red-300")
                                 }>
                                     {`${dayjs(weekDay?.date).format('ddd').toLocaleUpperCase().charAt(0)}`}
                                 </span>
@@ -45,7 +45,7 @@ export function Schedule() {
                                             weekDay?.schedulesQuantity <= 5 && "bg-blue-300 hover:from-blue-400",
                                             weekDay?.schedulesQuantity >= 6 && "bg-green-300 hover:from-green-400",
                                             weekDay?.schedulesQuantity >= 12 && "bg-orange-300 hover:from-orange-400",
-                                            weekDay?.schedulesQuantity >= 16 && "bg-red-300 hover:from-red-400")
+                                            weekDay?.schedulesQuantity >= 18 && "bg-red-300 hover:from-red-400")
                                         } />
                                     </HoverCard.Trigger>
                                     <HoverCard.Portal>
@@ -72,7 +72,7 @@ export function Schedule() {
                 <p className="text-zinc-100 w-[800px] text-center mt-10">O atendimento em nossa unidade ocorre de segunda a sexta-feira, exceto em dias de feriados. Com disponibilidade de horário para atendermos até 24 pacientes em um único dia.</p>
 
                 <div className="mt-4">
-                    <p className="text-zinc-100">Horário de atendimento pela parte da manhã: 8h ~ 11h</p>
+                    <p className="text-zinc-100">Horário de atendimento pela parte da manhã: 8h ~ 10h</p>
                     <p className="text-zinc-100">Horário de atendimento pela parte da tarde: 13h30 ~ 17h</p>
                 </div>
 
